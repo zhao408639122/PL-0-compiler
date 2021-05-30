@@ -1,0 +1,8 @@
+*.in
+*.out
+*.exe
+*.o
+.vscode/
+
+!lexical_partial_testcases/*
+!syntax_parital_testcases/*
