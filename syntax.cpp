@@ -194,6 +194,7 @@ void SyntaxAnalyzer::ifsentence(TreeNode *Node) {
 
 
 void SyntaxAnalyzer::condition(TreeNode *Node) {
+    Node = Node->addChild("CONDITION");
     if (nowpr().second == 1 && nowpr().first == "ODD") {
         expression(Node);
     } else {
