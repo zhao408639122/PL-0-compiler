@@ -37,7 +37,7 @@ public:
     void writesentence(TreeNode *Node);
     void relationalOperator(TreeNode *Node) {
         if ((nowpr().second == 2  && (nowpr().first == "=" || nowpr().first == "#" || nowpr().first == "<" || nowpr().first == ">"))
-        && nowpr().second == 4) {
+        || nowpr().second == 4) {
             Node->addChild(nowpr().first);
             pos++;
         } else setError(Node);

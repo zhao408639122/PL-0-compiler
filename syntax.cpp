@@ -8,6 +8,7 @@ SyntaxAnalyzer::SyntaxAnalyzer() {
 void SyntaxAnalyzer::analyze(vector <pr> *InputString) {
     Input = InputString;
     pos = stack = 0;
+    if (InputString->size() == 0) setError();
     program();
     if (pos < InputString->size()) setError();
 }
@@ -19,7 +20,7 @@ void SyntaxAnalyzer::program() {
     if (nowpr().second == 6 && nowpr().first == ".") {
         ResultRoot->addChild(".");
         pos++;
-    }
+    } else setError();
 }
 //SUBPROG
 void SyntaxAnalyzer::subprog(TreeNode *Node) {
@@ -94,7 +95,7 @@ void SyntaxAnalyzer::procedurehead(TreeNode *Node) {
     Node->addChild((*Input)[pos++].first);
     checkSemicolon(Node);
 }
-// <赋值语句>|<空语句>
+
 void SyntaxAnalyzer::sentence(TreeNode *Node) {
     Node = Node->addChild("SENTENCE");
     if (nowpr().second == 1) {
@@ -160,7 +161,7 @@ void SyntaxAnalyzer::expression(TreeNode *Node) {
 void SyntaxAnalyzer::item(TreeNode *Node) {
     Node = Node->addChild("ITEM");
     factor(Node);
-    while(nowpr().second == 2 && nowpr().first == "*" || nowpr().first == "/") {
+    while(nowpr().second == 2 && (nowpr().first == "*" || nowpr().first == "/")) {
         Node->addChild((*Input)[pos++].first);
         factor(Node);
     }
@@ -173,6 +174,7 @@ void SyntaxAnalyzer::factor(TreeNode *Node) {
     } 
     else if (nowpr().second == 6 && nowpr().first == "(") {
         Node->addChild("LP");
+        pos++;
         expression(Node);
         if (nowpr().second == 6 && nowpr().first == ")") {
             Node->addChild("RP");
@@ -184,6 +186,7 @@ void SyntaxAnalyzer::factor(TreeNode *Node) {
 void SyntaxAnalyzer::ifsentence(TreeNode *Node) {
     Node = Node->addChild("IFSENTENCE");
     Node->addChild("IF");
+    pos++;
     condition(Node);
     if (nowpr().second == 1 && nowpr().first == "THEN") {
         Node->addChild("THEN");
@@ -196,6 +199,8 @@ void SyntaxAnalyzer::ifsentence(TreeNode *Node) {
 void SyntaxAnalyzer::condition(TreeNode *Node) {
     Node = Node->addChild("CONDITION");
     if (nowpr().second == 1 && nowpr().first == "ODD") {
+        Node->addChild("ODD");
+        pos++;
         expression(Node);
     } else {
         expression(Node);
@@ -227,7 +232,7 @@ void SyntaxAnalyzer::whilesentence(TreeNode *Node) {
 
 void SyntaxAnalyzer::readsentence(TreeNode *Node) {
     Node = Node->addChild("READSENTENCE");
-    Node ->addChild("READ");
+    Node->addChild("READ");
     pos++;
     if (nowpr().second == 6 && nowpr().first == "(") {
         Node->addChild("LP");
@@ -273,3 +278,4 @@ void SyntaxAnalyzer::writesentence(TreeNode *Node) {
 // operator 2 4
 // number 3
 // identifier 5
+// flag 6
