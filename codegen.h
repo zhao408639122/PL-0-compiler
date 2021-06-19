@@ -4,9 +4,7 @@
 
 #define maxTable 10000
  
-enum WordType {
-    constant, variable, procedure
-};
+
 struct struct tableitem{
     string name;
     enum WordType type;
@@ -22,7 +20,7 @@ public:
     void clear();
     void gen(string s, int l, int a);
     void enter(const string &s, enum WordType type, int num = 0);
-    int position(const string &s);
+    int find(const string &s);
     vector<string> code;
     int tableptr, dataptr, lev;
     tableitem table[maxTable];

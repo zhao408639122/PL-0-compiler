@@ -7,13 +7,14 @@
 class SyntaxAnalyzer {
 public:
     SyntaxAnalyzer();
-    void setError(TreeNode* node = nullptr) {
+    void setError(TreeNode* node = nullptr, string s = NULL) {
         // cout << "[DELETE] pos: " << pos << "first: " << nowpr().first << " second: " << nowpr().second << endl;
         // if (node != nullptr)
         //     cout << "[DELETE] s: " << node->s << ", children.size(): " << node->children.size() << endl;  
+        if (s.length()) cout << s << endl;
         Pass = false;
         printf("Syntax Error\n");
-        exit(0);
+        exit(1);
     }
     void analyze(vector <pr> *InputString);
     void program(); 
@@ -36,12 +37,29 @@ public:
     void whilesentence(TreeNode *Node);
     void readsentence(TreeNode *Node);
     void writesentence(TreeNode *Node);
-    void relationalOperator(TreeNode *Node) {
-        if ((nowpr().second == 2  && (nowpr().first == "=" || nowpr().first == "#" || nowpr().first == "<" || nowpr().first == ">"))
-        || nowpr().second == 4) {
-            Node->addChild(nowpr().first);
-            pos++;
-        } else setError(Node);
+    OprType relationalOperator(TreeNode *Node) {
+        const pr &tmp = nowpr();
+        Node->addChild(nowpr().first);
+        pos++;
+        if (tmp.second == 2) {
+            switch (tmp.first[0]) {
+                case '=': 
+                    return Oequal;
+                case '#':
+                    return Oneq;
+                case '<': 
+                    return Oless;
+                case '>':
+                    return Ogreater;
+                default: 
+                    setError(Node);
+            }
+        }
+        else if (tmp.second == 4) {
+            OprType res = tmp.first[0] == '<' ? Oleq : Ogeq;
+            return res;    
+        }       
+        else setError(Node);
     }
 
     void printAnswer() {

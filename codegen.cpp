@@ -44,7 +44,7 @@ void CodeGenerator::enter(const string &s, enum WordType type, int num) {
     }
 }
 
-int CodeGenerator::position(const string &s) {
+int CodeGenerator::find(const string &s) {
     for (int i = tableptr; i; --i) {
         if (table[i].name == s) return i;
     }

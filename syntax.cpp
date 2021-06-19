@@ -155,13 +155,21 @@ void SyntaxAnalyzer::combined(TreeNode *Node) {
 
 void SyntaxAnalyzer::expression(TreeNode *Node) {
     Node = Node->addChild("EXPRESSION");
+    int opr = 0;
     if (nowpr().second == 2 && (nowpr().first == "+" || nowpr().first == "-")) {
-        Node->addChild((*Input)[pos++].first);
+        opr = nowpr().first == "-";
+        Node->addChild((*Input)[pos++].first);    
     } 
     item(Node);
+    if (opr) Code.gen("opr", 0, Oneg);
+    
     while(nowpr().second == 2 && (nowpr().first == "+" || nowpr().first == "-")) {
+        opr = nowpr().first == "+" ? Oplus : Ominus;
+        
         Node->addChild((*Input)[pos++].first);
         item(Node);
+
+        Code.gen("opr", 0, opr);
     }
 }
 
@@ -169,16 +177,37 @@ void SyntaxAnalyzer::item(TreeNode *Node) {
     Node = Node->addChild("ITEM");
     factor(Node);
     while(nowpr().second == 2 && (nowpr().first == "*" || nowpr().first == "/")) {
+        OprType opr = nowpr().first == "*" ? Otimes : Odivide;
         Node->addChild((*Input)[pos++].first);
         factor(Node);
+
+        Code.gen("opr", 0, opr);
     }
 }
 
 void SyntaxAnalyzer::factor(TreeNode *Node) {
     Node = Node->addChild("FACTOR");
-    if (nowpr().second == 5 || nowpr().second == 3) {
+    if (nowpr().second == 5) {
+        int pos = Code.find(nowpr().first);
+        if (!pos) setError(Node, "Identifier was not declared.");
+
+        switch (Code.table[pos].type) {
+            case constant: 
+                Code.gen("lit", 0, Code.table[pos].val);
+                break;
+            case variable:
+                Code.gen("lod", Code.lev - Code.table[pos].level, Code.table[pos].addr);
+                break;
+            case procedure: 
+                setError(Node, "Procedure identifier cannot place in a factor.");
+                break;
+        }
         Node->addChild((*Input)[pos++].first);
     } 
+    else if (nowpr().second == 3) {
+        Code.gen("lit", 0, atoi(nowpr().first.c_str()));
+        Node->addChild((*Input)[pos++].first);
+    }
     else if (nowpr().second == 6 && nowpr().first == "(") {
         Node->addChild("LP");
         pos++;
@@ -209,10 +238,12 @@ void SyntaxAnalyzer::condition(TreeNode *Node) {
         Node->addChild("ODD");
         pos++;
         expression(Node);
+        Code.gen("opr", 0, Oodd);
     } else {
         expression(Node);
-        relationalOperator(Node);
+        OprType relop = relationalOperator(Node);
         expression(Node);
+        Code.gen("opr", 0, relop);
     }
 }
 

@@ -14,9 +14,18 @@ using namespace std;
 
 typedef pair<string, int> pr;
 
+enum WordType {
+    constant, variable, procedure
+};
+
+enum OprType {
+    Oneg, Oplus, Ominus, Otimes, Odivide, Oodd, Oequal, Oneq, Oless, Oleq, Ogreater, Ogeq
+};
+
 bool equiv(const string &a, const string &b, int offset);
 bool isCharacter(const char &a);
 bool isNumber(const char &a);
+
 
 // Keywords 1
 // operator 2 4

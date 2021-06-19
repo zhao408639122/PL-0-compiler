@@ -52,7 +52,7 @@ int main() {
  
     if (LexicalMachine->getAns() == 0) {
         cout << "Lexical Error" << endl;
-        exit(0);
+        exit(1);
     }
     // int pos = 0;
     // for (auto i : *LexcicalAnswer) {
