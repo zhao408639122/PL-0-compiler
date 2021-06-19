@@ -2,6 +2,7 @@
 #define SYNTAX_H
 
 #include "common.h"
+#include "codegen.h"
 
 class SyntaxAnalyzer {
 public:
@@ -60,6 +61,7 @@ private:
     int stack, pos, Pass;
     TreeNode *ResultRoot;
     vector <pr> *Input;
+    CodeGenerator Code;
 };
 
 #endif

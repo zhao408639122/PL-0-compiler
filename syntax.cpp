@@ -52,11 +52,15 @@ void SyntaxAnalyzer::constantdeclare(TreeNode *Node) {
 
 void SyntaxAnalyzer::constantdefine(TreeNode *Node) {
     Node = Node->addChild("CONSTANTDEFINE");
-    if (nowpr().second != 5) setError(Node);
+    if (nowpr().second != 5) setError(Node); // identifier 
     Node->addChild((*Input)[pos++].first);
+    const string &name = nowpr().first;
     if (nowpr().second != 2 || nowpr().first != "=") setError(Node);
     Node->addChild((*Input)[pos++].first);
-    if (nowpr().second != 3) setError(Node);
+    
+    if (nowpr().second != 3) setError(Node); // number 
+    int num = atoi(nowpr().first.c_str());
+    Code.enter(name, constant, num);
     Node->addChild((*Input)[pos++].first);
     
 }
@@ -66,11 +70,13 @@ void SyntaxAnalyzer::variabledeclare(TreeNode *Node) {
     Node->addChild("VAR");
     pos++;
     if (nowpr().second != 5) setError(Node);
+    Code.enter(nowpr().first, variable);
     Node->addChild((*Input)[pos++].first);
     while(nowpr().second == 6 && nowpr().first == ",") {
         Node->addChild("COMMA");
         pos++;
         if (nowpr().second != 5) setError(Node);
+        Code.enter(nowpr().first, variable);
         Node->addChild((*Input)[pos++].first);
     }
     checkSemicolon(Node);
@@ -92,6 +98,7 @@ void SyntaxAnalyzer::procedurehead(TreeNode *Node) {
     Node->addChild("PROCEDURE");
     pos++;
     if (nowpr().second != 5) setError(Node);
+    Code.enter(nowpr().first, procedure);
     Node->addChild((*Input)[pos++].first);
     checkSemicolon(Node);
 }

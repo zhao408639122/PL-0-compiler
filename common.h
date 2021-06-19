@@ -8,7 +8,7 @@
 #include<algorithm>
 #include<unordered_map>
 #include<vector>
-
+#include<cstdlib>
 
 using namespace std;
 
@@ -18,6 +18,11 @@ bool equiv(const string &a, const string &b, int offset);
 bool isCharacter(const char &a);
 bool isNumber(const char &a);
 
+// Keywords 1
+// operator 2 4
+// number 3
+// identifier 5
+// flag 6
 
 struct TreeNode{
     string s;
