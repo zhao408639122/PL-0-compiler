@@ -15,7 +15,8 @@ void SyntaxAnalyzer::analyze(vector <pr> *InputString) {
 
 //PROGRAM
 void SyntaxAnalyzer::program() {
-    ResultRoot = new TreeNode("PROGRAM");    
+    ResultRoot = new TreeNode("PROGRAM");  
+    Code.init();
     subprog(ResultRoot);
     if (nowpr().second == 6 && nowpr().first == ".") {
         ResultRoot->addChild(".");
@@ -24,6 +25,12 @@ void SyntaxAnalyzer::program() {
 }
 //SUBPROG
 void SyntaxAnalyzer::subprog(TreeNode *Node) {
+    int OrgTableptr, OrgDataptr;
+    Code.dataptr = 3;
+    OrgTableptr = Code.tableptr;
+    Code.table[OrgTableptr].addr = Code.getCodeptr();
+    Code.gen("jmp", 0, 0);
+    
     Node = Node->addChild("SUBPROG");
     if (nowpr().second == 1 && nowpr().first == "CONST") {
         constantdeclare(Node);
@@ -34,7 +41,12 @@ void SyntaxAnalyzer::subprog(TreeNode *Node) {
     if (nowpr().second == 1 && nowpr().first == "PROCEDURE") {
         proceduredeclare(Node);
     }
+
+    Code.code[Code.table[OrgTableptr].addr].a = Code.getCodeptr();
+    Code.table[OrgTableptr].addr = Code.getCodeptr();
+    Code.gen("int", 0, Code.dataptr);
     sentence(Node);
+    Code.gen("opr", 0, Oreturn);
 }
 //CONSTANTDECLARE
 void SyntaxAnalyzer::constantdeclare(TreeNode *Node) {
@@ -60,7 +72,7 @@ void SyntaxAnalyzer::constantdefine(TreeNode *Node) {
     
     if (nowpr().second != 3) setError(Node); // number 
     int num = atoi(nowpr().first.c_str());
-    Code.enter(name, constant, num);
+    Code.enter(name, constant, num); // add a constant to table
     Node->addChild((*Input)[pos++].first);
     
 }
@@ -76,7 +88,7 @@ void SyntaxAnalyzer::variabledeclare(TreeNode *Node) {
         Node->addChild("COMMA");
         pos++;
         if (nowpr().second != 5) setError(Node);
-        Code.enter(nowpr().first, variable);
+        Code.enter(nowpr().first, variable); // add a variable to table
         Node->addChild((*Input)[pos++].first);
     }
     checkSemicolon(Node);
@@ -86,7 +98,13 @@ void SyntaxAnalyzer::proceduredeclare(TreeNode *Node) {
     Node = Node->addChild("PROCEDUREDECLARE");
     procedurehead(Node);
     if (++stack > 3) setError(Node);
+    Code.lev++;
+    int PreTableptr = Code.tableptr;
+    int PreDataptr = Code.dataptr;
     subprog(Node);
+    Code.lev--;
+    Code.tableptr = PreTableptr;
+    Code.dataptr = PreDataptr;
     stack--;
     checkSemicolon(Node);
     while(nowpr().second == 1 && nowpr().first == "PROCEDURE") 
@@ -129,11 +147,18 @@ void SyntaxAnalyzer::sentence(TreeNode *Node) {
 
 void SyntaxAnalyzer::assignment(TreeNode *Node) {
     Node = Node->addChild("ASSIGNMENT");
+
+    int TablePos = Code.find(nowpr().first);
+    if (TablePos == 0) setError(Node, "Identifier was not declared.");
+    TableItem &TableObject = Code.table[TablePos];
+    if (TableObject.type != variable) setError(Node, "Invalid type of identifier.");
+
     Node->addChild((*Input)[pos++].first);
     if (nowpr().second == 2 && nowpr().first == ":=") {
         Node->addChild(":=");
         pos++;
         expression(Node);
+        Code.gen("sto", Code.lev - TableObject.level, TableObject.addr);
     } else setError(Node);
 }
 
@@ -180,7 +205,6 @@ void SyntaxAnalyzer::item(TreeNode *Node) {
         OprType opr = nowpr().first == "*" ? Otimes : Odivide;
         Node->addChild((*Input)[pos++].first);
         factor(Node);
-
         Code.gen("opr", 0, opr);
     }
 }
@@ -188,15 +212,15 @@ void SyntaxAnalyzer::item(TreeNode *Node) {
 void SyntaxAnalyzer::factor(TreeNode *Node) {
     Node = Node->addChild("FACTOR");
     if (nowpr().second == 5) {
-        int pos = Code.find(nowpr().first);
-        if (!pos) setError(Node, "Identifier was not declared.");
-
-        switch (Code.table[pos].type) {
+        int TablePos = Code.find(nowpr().first);
+        if (!TablePos) setError(Node, "Identifier was not declared.");
+        TableItem TableObject = Code.table[TablePos];
+        switch (TableObject.type) {
             case constant: 
-                Code.gen("lit", 0, Code.table[pos].val);
+                Code.gen("lit", 0, TableObject.val);
                 break;
             case variable:
-                Code.gen("lod", Code.lev - Code.table[pos].level, Code.table[pos].addr);
+                Code.gen("lod", Code.lev - TableObject.level, Code.table[pos].addr);
                 break;
             case procedure: 
                 setError(Node, "Procedure identifier cannot place in a factor.");
@@ -220,6 +244,7 @@ void SyntaxAnalyzer::factor(TreeNode *Node) {
 }
 
 void SyntaxAnalyzer::ifsentence(TreeNode *Node) {
+    int PreCodeptr;
     Node = Node->addChild("IFSENTENCE");
     Node->addChild("IF");
     pos++;
@@ -228,7 +253,11 @@ void SyntaxAnalyzer::ifsentence(TreeNode *Node) {
         Node->addChild("THEN");
         pos++;
     } else setError(Node);
+    PreCodeptr = Code.getCodeptr();
+    Code.gen("jpc", 0, 0);
     sentence(Node);
+    Code.code[PreCodeptr].a = Code.getCodeptr();
+    
 }
 
 
@@ -252,6 +281,11 @@ void SyntaxAnalyzer::callsentence(TreeNode *Node) {
     Node->addChild("CALL");
     pos++;
     if (nowpr().second == 5) {
+        int TablePos = Code.find(nowpr().first);
+        if (TablePos == 0) setError(Node, "Identifier was not declared.");
+        TableItem &TableObject = Code.table[TablePos];
+        if (TableObject.type != procedure) setError(Node, "The identifier was not a procedure.");
+        Code.gen("cal", Code.lev - TableObject.level, TableObject.addr);
         Node->addChild((*Input)[pos++].first);
     } else setError(Node);
 }
@@ -260,11 +294,16 @@ void SyntaxAnalyzer::whilesentence(TreeNode *Node) {
     Node = Node->addChild("WHILESENTENCE");
     Node ->addChild("WHILE");
     pos++;
+    int WhileCodeptr = Code.getCodeptr();
     condition(Node);
+    int DoCodeptr = Code.getCodeptr();
+    Code.gen("jpc", 0, 0);
     if (nowpr().second == 1 && nowpr().first == "DO") {
         Node->addChild("DO");
         pos++;
         sentence(Node);
+        Code.gen("jmp", 0, WhileCodeptr);
+        Code.code[DoCodeptr].a = Code.getCodeptr();
     } else setError(Node);
 }
 

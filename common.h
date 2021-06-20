@@ -19,7 +19,22 @@ enum WordType {
 };
 
 enum OprType {
-    Oneg, Oplus, Ominus, Otimes, Odivide, Oodd, Oequal, Oneq, Oless, Oleq, Ogreater, Ogeq
+    Oneg, Oplus, Ominus, Otimes, Odivide, Oodd, Oequal, Oneq, Oless, Oleq, Ogreater, Ogeq, Oread, Owrite, Oreturn
+};
+
+struct TableItem{
+    string name;
+    enum WordType type;
+    int val;
+    int level;
+    int addr; 
+};
+
+struct Instruction {
+    string code; 
+    int l;
+    int a;
+    Instruction(string _code, int _l, int _a) : code(_code), l(_l), a(_a) {}
 };
 
 bool equiv(const string &a, const string &b, int offset);

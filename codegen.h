@@ -3,27 +3,19 @@
 #include "common.h"
 
 #define maxTable 10000
- 
-
-struct struct tableitem{
-    string name;
-    enum WordType type;
-    int val;
-    int level;
-    int addr; 
-};
 
 class CodeGenerator{
 public:
     CodeGenerator();
     void setError(string &&);
-    void clear();
+    void init();
     void gen(string s, int l, int a);
     void enter(const string &s, enum WordType type, int num = 0);
     int find(const string &s);
-    vector<string> code;
+    int getCodeptr();
+    vector<Instruction> code;
     int tableptr, dataptr, lev;
-    tableitem table[maxTable];
+    TableItem table[maxTable];
 };
 
 #endif
