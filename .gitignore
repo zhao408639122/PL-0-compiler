@@ -7,3 +7,4 @@
 
 !lexical_partial_testcases/*
 !syntax_parital_testcases/*
+!spfa/*
