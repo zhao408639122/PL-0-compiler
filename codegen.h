@@ -13,6 +13,8 @@ public:
     void enter(const string &s, enum WordType type, int num = 0);
     int find(const string &s);
     int getCodeptr();
+    void listCode();
+    void listTable();
     vector<Instruction> code;
     int tableptr, dataptr, lev;
     TableItem table[maxTable];

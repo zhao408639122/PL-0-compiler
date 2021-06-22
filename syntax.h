@@ -8,10 +8,13 @@ class SyntaxAnalyzer {
 public:
     SyntaxAnalyzer();
     void setError(TreeNode* node = nullptr, string s = NULL) {
-        // cout << "[DELETE] pos: " << pos << "first: " << nowpr().first << " second: " << nowpr().second << endl;
-        // if (node != nullptr)
-        //     cout << "[DELETE] s: " << node->s << ", children.size(): " << node->children.size() << endl;  
-        if (s.length()) cout << s << endl;
+        cout << "[DELETE] pos: " << pos << "first: " << nowpr().first << " second: " << nowpr().second << endl;
+        if (node != nullptr)
+            cout << "[DELETE] s: " << node->s << ", children.size(): " << node->children.size() << endl;  
+        if (s.length()) {
+            cout << s << endl;
+            Code.listTable();
+        }
         Pass = false;
         printf("Syntax Error\n");
         exit(1);
@@ -37,6 +40,7 @@ public:
     void whilesentence(TreeNode *Node);
     void readsentence(TreeNode *Node);
     void writesentence(TreeNode *Node);
+    void listCode();
     OprType relationalOperator(TreeNode *Node) {
         const pr &tmp = nowpr();
         Node->addChild(nowpr().first);

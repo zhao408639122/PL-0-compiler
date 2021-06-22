@@ -3,6 +3,7 @@
 *.exe
 *.o
 .vscode/
+*.code
 
 !lexical_partial_testcases/*
 !syntax_parital_testcases/*

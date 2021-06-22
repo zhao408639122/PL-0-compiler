@@ -38,7 +38,7 @@ void initialize() {
 
 int main() {
     // freopen("lexical_partial_testcases/std.in", "r", stdin);
-    // freopen("ans.out", "w", stdout);
+    freopen("program.code", "w", stdout);
     ios::sync_with_stdio(false);
     initialize();
     string input;
@@ -54,14 +54,15 @@ int main() {
         cout << "Lexical Error" << endl;
         exit(1);
     }
-    // int pos = 0;
+    int pos = 0;
     // for (auto i : *LexcicalAnswer) {
     //     cout << pos++ << " first: " << i.first << "  second: " << i.second << endl; 
     // }
     
     SyntaxMachine->analyze(LexcicalAnswer);
-    SyntaxMachine->printAnswer();
-
+    // SyntaxMachine->printAnswer();
+    // cout << endl; 
+    SyntaxMachine->listCode();
     // machine->printAnswer();
     
     // system("fc ans.out ans1.out");

@@ -65,8 +65,8 @@ void SyntaxAnalyzer::constantdeclare(TreeNode *Node) {
 void SyntaxAnalyzer::constantdefine(TreeNode *Node) {
     Node = Node->addChild("CONSTANTDEFINE");
     if (nowpr().second != 5) setError(Node); // identifier 
-    Node->addChild((*Input)[pos++].first);
     const string &name = nowpr().first;
+    Node->addChild((*Input)[pos++].first);
     if (nowpr().second != 2 || nowpr().first != "=") setError(Node);
     Node->addChild((*Input)[pos++].first);
     
@@ -193,7 +193,6 @@ void SyntaxAnalyzer::expression(TreeNode *Node) {
         
         Node->addChild((*Input)[pos++].first);
         item(Node);
-
         Code.gen("opr", 0, opr);
     }
 }
@@ -220,7 +219,7 @@ void SyntaxAnalyzer::factor(TreeNode *Node) {
                 Code.gen("lit", 0, TableObject.val);
                 break;
             case variable:
-                Code.gen("lod", Code.lev - TableObject.level, Code.table[pos].addr);
+                Code.gen("lod", Code.lev - TableObject.level, TableObject.addr);
                 break;
             case procedure: 
                 setError(Node, "Procedure identifier cannot place in a factor.");
@@ -315,11 +314,27 @@ void SyntaxAnalyzer::readsentence(TreeNode *Node) {
         Node->addChild("LP");
         pos++;
         if (nowpr().second != 5) setError(Node);
+        
+        int TablePos = Code.find(nowpr().first);
+        if (TablePos == 0) setError(Node, "Identifier was not declared.");
+        TableItem &TableObject = Code.table[TablePos];
+        if (TableObject.type != variable) setError(Node, "Invalid type of identifier.");
+        Code.gen("opr", 0, Oread);
+        Code.gen("sto", Code.lev - TableObject.level, TableObject.addr);
+        
         Node->addChild((*Input)[pos++].first);
         while(nowpr().second == 6 && nowpr().first == ",") {
             Node->addChild("COMMA");
             pos++;
             if (nowpr().second != 5) setError(Node);
+            // check in t
+            int TablePos = Code.find(nowpr().first);
+            if (TablePos == 0) setError(Node, "Identifier was not declared.");
+            TableItem &TableObject = Code.table[TablePos];
+            if (TableObject.type != variable) setError(Node, "Invalid type of identifier.");
+            Code.gen("opr", 0, Oread);
+            Code.gen("sto", Code.lev - TableObject.level, TableObject.addr);
+            
             Node->addChild((*Input)[pos++].first);    
         } 
         if (nowpr().second == 6 && nowpr().first == ")") {
@@ -329,7 +344,7 @@ void SyntaxAnalyzer::readsentence(TreeNode *Node) {
     } else setError(Node);
 }
 
-void SyntaxAnalyzer::writesentence(TreeNode *Node) {
+void SyntaxAnalyzer::writesentence(TreeNode *Node) {// to do: add generator
     Node = Node->addChild("WRITESENTENCE");
     Node ->addChild("WRITE");
     pos++;
@@ -337,11 +352,45 @@ void SyntaxAnalyzer::writesentence(TreeNode *Node) {
         Node->addChild("LP");
         pos++;
         if (nowpr().second != 5) setError(Node);
+        
+        int TablePos = Code.find(nowpr().first);
+        if (TablePos == 0) setError(Node, "Identifier was not declared.");
+        TableItem &TableObject = Code.table[TablePos];
+        switch (TableObject.type) {
+            case procedure: 
+                setError(Node, "Invalid type of identifier.");
+            case variable: 
+                Code.gen("lod", Code.lev - TableObject.level, TableObject.addr);
+                Code.gen("opr", 0, Owrite);
+                break; 
+            case constant: 
+                Code.gen("lit", 0, TableObject.val);
+                Code.gen("opr", 0, Owrite);
+                break; 
+        }
+        
         Node->addChild((*Input)[pos++].first);
         while(nowpr().second == 6 && nowpr().first == ",") {
             Node->addChild("COMMA");
             pos++;
             if (nowpr().second != 5) setError(Node);
+            
+            int TablePos = Code.find(nowpr().first);
+            if (TablePos == 0) setError(Node, "Identifier was not declared.");
+            TableItem &TableObject = Code.table[TablePos];
+            switch (TableObject.type) {
+                case procedure: 
+                    setError(Node, "Invalid type of identifier.");
+                case variable: 
+                    Code.gen("lod", Code.lev - TableObject.level, TableObject.addr);
+                    Code.gen("opr", 0, Owrite);
+                    break; 
+                case constant: 
+                    Code.gen("lit", 0, TableObject.val);
+                    Code.gen("opr", 0, Owrite);
+                    break;
+            }
+            
             Node->addChild((*Input)[pos++].first);    
         } 
         if (nowpr().second == 6 && nowpr().first == ")") {
@@ -350,7 +399,9 @@ void SyntaxAnalyzer::writesentence(TreeNode *Node) {
         } else setError(Node);
     } else setError(Node);   
 }
-
+void SyntaxAnalyzer::listCode() { 
+    Code.listCode();
+}
 // Keywords 1 
 // operator 2 4
 // number 3

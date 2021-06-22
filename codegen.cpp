@@ -6,7 +6,7 @@ CodeGenerator::CodeGenerator() {}
 void CodeGenerator::setError(string && s = NULL) {
     if (s.length()) {
         cout << s << endl;
-        exit(0);
+        exit(1);
     }
 }
 
@@ -20,8 +20,9 @@ void CodeGenerator::gen(string s, int l, int a) {
 }
 
 void CodeGenerator::enter(const string &s, enum WordType type, int num) {
+    int exist = find(s);
+    if (exist && table[exist].level == lev) setError("variable declared.");
     tableptr = tableptr + 1;
-
     table[tableptr].name = s;
     table[tableptr].type = type;
     
@@ -51,4 +52,16 @@ int CodeGenerator::find(const string &s) {
 
 int CodeGenerator::getCodeptr() { 
     return code.size();
+}
+
+void CodeGenerator::listCode() { 
+    for (auto i : code) {
+        i.print();
+    }
+}
+
+void CodeGenerator::listTable() { 
+    for (int i = 1; i <= tableptr; ++i) {
+        cout << "name: " << table[i].name << ", type: " << table[i].type << ", addr: " << table[i].addr << endl;  
+    }
 }

@@ -9,7 +9,8 @@
 #include<unordered_map>
 #include<vector>
 #include<cstdlib>
-
+#include<stack> 
+#include<climits>
 using namespace std;
 
 typedef pair<string, int> pr;
@@ -34,7 +35,13 @@ struct Instruction {
     string code; 
     int l;
     int a;
-    Instruction(string _code, int _l, int _a) : code(_code), l(_l), a(_a) {}
+    Instruction(string _code = "", int _l = 0, int _a = 0) : code(_code), l(_l), a(_a) {}
+    void readin(istream &fin = cin) { 
+        fin >> code >> l >> a; 
+    }
+    void print() { 
+        cout << code << ' ' << l << ' ' << a << endl; 
+    }
 };
 
 bool equiv(const string &a, const string &b, int offset);
